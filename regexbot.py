@@ -40,6 +40,7 @@ DEFAULT_CONFIG = {
 		'max_messages': 25,
 		'max_message_size': 200,
 		'version': 'regexbot; https://github.com/micolous/ircbots/',
+		'translate_enabled': "True",
 	}
 }
 
@@ -67,6 +68,7 @@ VERSION = config.get('regexbot', 'version') + '; %s'
 try: VERSION = VERSION % Popen(["git","branch","-v","--contains"], stdout=PIPE).communicate()[0].strip()
 except: VERSION = VERSION % 'unknown'
 del Popen, PIPE
+TRANSLATE_ENABLED = config.get('regexbot','translate_enabled') == "True"
 
 CHANNEL_FLOOD_COOLDOWN = timedelta(seconds=config.getint('regexbot', 'channel_flood_cooldown'))
 GLOBAL_FLOOD_COOLDOWN = timedelta(seconds=config.getint('regexbot', 'global_flood_cooldown'))
@@ -74,6 +76,7 @@ MAX_MESSAGES = config.getint('regexbot', 'max_messages')
 MAX_MESSAGE_SIZE = config.getint('regexbot', 'max_message_size')
 try: NICKSERV_PASS = config.get('regexbot', 'nickserv_pass')
 except: NICKSERV_PASS = None
+
 
 message_buffer = {}
 last_message = datetime.now()
@@ -236,7 +239,7 @@ def handle_msg(event, match):
 
 	if msg.startswith('s'):
 		str_replace = True
-	if msg.startswith('y'):
+	if msg.startswith('y') and TRANSLATE_ENABLED:
 		str_translate = True
 	
 	valid_separators = ['@','#','%',':',';','/','\xe1']
