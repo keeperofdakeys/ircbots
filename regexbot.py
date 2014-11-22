@@ -41,6 +41,7 @@ DEFAULT_CONFIG = {
     'max_message_size': 200,
     'version': 'regexbot; https://github.com/micolous/ircbots/',
     'translate_enabled': "True",
+    'reconnect_to_server': "False"
     }
 }
 
@@ -69,6 +70,7 @@ try: VERSION = VERSION % Popen(["git","branch","-v","--contains"], stdout=PIPE).
 except: VERSION = VERSION % 'unknown'
 del Popen, PIPE
 TRANSLATE_ENABLED = config.get('regexbot','translate_enabled') == "True"
+RECONNECT_TO_SERVER = config.get('regexbot', 'reconnect_to_server') == "True"
 
 CHANNEL_FLOOD_COOLDOWN = timedelta(seconds=config.getint('regexbot', 'channel_flood_cooldown'))
 GLOBAL_FLOOD_COOLDOWN = timedelta(seconds=config.getint('regexbot', 'global_flood_cooldown'))
@@ -447,12 +449,17 @@ class RegexThread(threading.Thread):
 class TimeoutException(Exception):
     pass
 
+def irc_conn(irc):
+    irc.make_conn(SERVER, PORT, ipv6=IPV6)
+
+if RECONNECT_TO_SERVER:
+    IRC.handle_close = irc_conn
+    IRC.handle_error = irc_conn
 
 irc = IRC(nick=NICK, start_channels=CHANNELS, version=VERSION)
 irc.bind(handle_msg, PRIVMSG)
 irc.bind(handle_welcome, RPL_WELCOME)
 irc.bind(handle_ctcp, CTCP_REQUEST)
+irc_conn(irc)
 
-irc.make_conn(SERVER, PORT, ipv6=IPV6)
 asyncore.loop()
-
